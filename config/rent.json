@@ -1,0 +1,21 @@
+{
+   "Office": {
+     "Ped":"S_M_M_Postal_01",
+     "PedScenario":"WORLD_HUMAN_CLIPBOARD",
+     "TargetLabelManager":"Начать работу",
+     "TargetLabelManagerDone":"Закончить работу",
+     "TargetIcon": "fa fa-align-justify",
+     "Places": [
+       {
+          "PedPosition": {"x":-1016.72, "y":-2703.42, "z":13.76, "w":150.51},
+          "VehicleSpawnPosition": {"x":-1014.17, "y":-2696.54, "z":13.98, "w":159.32}
+       }
+     ],
+     "Blip":{
+       "Name":"VehicleRent",
+       "Sprite": 616,
+       "Color": 2,
+       "Scale":0.6
+     }
+   }
+}

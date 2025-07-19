@@ -1,18 +1,14 @@
 const Delay = (time: number) => new Promise(resolve => setTimeout(resolve, time));
+import { Vector3 } from 'fivem-js';
+import * as cfx from "fivem-js";
+import { locale } from '../global/locale'
+import { rent } from '../global/configRent'
 
-RegisterCommand("sv",async (source:number, args: string[], rawCommand:string) => {
-	const [model] = args
-	const modelHash = GetHashKey(model)
 
-	if (!IsModelAVehicle(modelHash)) return
-	RequestModel(modelHash)
-	while (!HasModelLoaded) await Delay(100)
+//инициализируем программу
+const init = setTick(async () => {
 
-	const [x,y,z] = GetEntityCoords(PlayerPedId(), true)
-	const h = GetEntityHeading(PlayerPedId())
-	const veh = CreateVehicle(modelHash,x,y,z,h, true, true)
+    await Delay(1000)
+    //отрисовываем блипы
 
-	while (!DoesEntityExist(veh)) await Delay(100)
-
-	SetPedIntoVehicle(PlayerPedId(), veh, -1)
-}, false)
+})
