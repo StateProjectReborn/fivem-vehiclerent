@@ -17,7 +17,7 @@ interface IOffice {
     Places:IPlaces[];
     Blip:Blip,
 }
-interface IPlaces {
+export interface IPlaces {
     PedPosition:IPosition,
     VehicleSpawnPosition:IPosition
 }

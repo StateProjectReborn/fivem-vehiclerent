@@ -13,8 +13,8 @@
      ],
      "Blip":{
        "Name":"VehicleRent",
-       "Sprite": 616,
-       "Color": 2,
+       "Sprite": 348,
+       "Color": 25,
        "Scale":0.6
      }
    }
