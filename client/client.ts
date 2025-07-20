@@ -1,82 +1,33 @@
 import {pedCreate} from "../client/utils";
-
+import { RentalManager as manager } from '../global/classes/rentalManager';
 const Delay = (time: number) => new Promise(resolve => setTimeout(resolve, time));
 
 import { Vector3 } from 'fivem-js';
 import * as utils from '../client/utils';
 import { rent } from '../global/configRent';
 
-const blips: number[] = [];
-const peds: number[] = [];
+let rentalManager:manager;
 
-// Основная функция
-async function initializeRentalBlips() {
-    await Delay(1000);
-    const tempData = []
-    // Создаем блипы
-    for (const place of Object.values(rent.Office.Places)) {
-        const pos = new Vector3(
-            place.PedPosition.x,
-            place.PedPosition.y,
-            place.PedPosition.z
-        );
 
-        const blip = await utils.blipCreate(
-            pos,
-            rent.Office.Blip.Name,
-            rent.Office.Blip.Sprite,
-            rent.Office.Blip.Color,
-            rent.Office.Blip.Scale
-        );
 
-        if (blip) blips.push(blip);
-        //Добавляем педов и таргеты
-        const v3 = new Vector3(place.PedPosition.x, place.PedPosition.y, place.PedPosition.z)
 
-        let ped = await utils.pedCreate(rent.Office.Ped, v3, place.PedPosition.w, rent.Office.PedScenario);
-        global.exports['qb-target'].AddTargetEntity(ped, {
-            options: [
-                //начинаем работать
-                {
-                    type : 'client',
-                    event : 'c-fractionGarage:client:vehicleMenu',
-                    icon : rent.Office.TargetIcon,
-                    label : rent.Office.TargetLabel,
-                    //canInteract: () => {return  !inMission},
-                },
-            ],
-            distance: 2.5,
-        });
-        if (ped) peds.push(ped)
-    }
-}
-
-// Функция очистки
-async function cleanup() {
-    blips.forEach(blip => RemoveBlip(blip));
-    blips.length = 0;
-    for (const ped of peds) {
-        SetBlockingOfNonTemporaryEvents(ped, false)
-        ClearPedTasksImmediately(ped)
-        SetEntityAsNoLongerNeeded(ped)
-        await Delay(5000);
-        DeletePed(ped);
-        DeleteEntity(ped);
-    }
-    peds.length = 0;
-}
 
 // Запуск инициализации
 const init = setTick(async () => {
-    await initializeRentalBlips();
+
+    rentalManager = new manager();
+
+
+    //await initializeRentalBlips();
     clearTick(init);
+    console.log('Система аренды инициализирована');
 });
 
-export { cleanup };
+//export { cleanup };
 
 
 on("onResourceStop", (resource: string) => {
     if (resource == GetCurrentResourceName()) {
-        cleanup().then(r => console.debug("cleanup is correctly finished"));
+        rentalManager.cleanup().then(r => console.debug("cleanup is correctly finished"));
     }
 });

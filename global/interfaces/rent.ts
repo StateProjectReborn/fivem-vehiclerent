@@ -1,5 +1,5 @@
-import {Blip} from '../interfaces/blip'
-import {Marker} from '../interfaces/marker'
+import {Blip} from './blip'
+import {Marker} from './marker'
 
 type Rent = IRootObject
 
