@@ -1,101 +1,81 @@
-// Утилита для создания задержки
 const Delay = (time: number) => new Promise(resolve => setTimeout(resolve, time));
 
-// Импорты
-import { Vector3, Blip } from 'fivem-js';
-import { IPlaces } from '../global/interfaces/rent';
+import { Vector3 } from 'fivem-js';
 import * as utils from '../client/utils';
 import { rent } from '../global/configRent';
 
-// Переменные
-let mainBlip: Blip | null = null;
-const createdBlips: Blip[] = [];
+const blips: number[] = [];
+const peds: number[] = [];
 
-// Основная функция инициализации
+// Основная функция
 async function initializeRentalBlips() {
     await Delay(1000);
+    const tempData = []
+    // Создаем блипы
+    for (const place of Object.values(rent.Office.Places)) {
+        const pos = new Vector3(
+            place.PedPosition.x,
+            place.PedPosition.y,
+            place.PedPosition.z
+        );
 
-    // 1. Проверка структуры конфига
-    if (!validateConfig(rent)) {
-        return;
-    }
+        const blip = await utils.blipCreate(
+            pos,
+            rent.Office.Blip.Name,
+            rent.Office.Blip.Sprite,
+            rent.Office.Blip.Color,
+            rent.Office.Blip.Scale
+        );
 
-    try {
-        cleanupBlips();
-
-        // 2. Создание блипов
-        await createBlipsForPlaces();
-    } catch (e) {
-        console.error('Ошибка при инициализации блипов:', e);
-    }
-}
-
-// Валидация структуры конфига
-function validateConfig(config: any): config is { Office: { Places: Record<string, IPlaces>, Blip?: any } } {
-    if (!config?.Office?.Places) {
-        console.error('Неверная структура конфига. Ожидается rent.Office.Places');
-        console.debug('Полученный конфиг:', JSON.stringify(config, null, 2));
-        return false;
-    }
-
-    const places = Object.values(config.Office.Places);
-    if (places.length === 0) {
-        console.warn('Конфиг содержит пустой Places объект');
-        return false;
-    }
-
-    return true;
-}
-
-// Создание блипов для всех мест
-async function createBlipsForPlaces() {
-    for (const [index, place] of Object.entries(rent.Office.Places)) {
-        try {
-            const blip = await createSingleBlip(place, index);
-            if (blip) {
-                createdBlips.push(blip);
-                mainBlip = blip;
-            }
-        } catch (e) {
-            console.error(`Ошибка при обработке места ${index}:`, e);
+        if (blip) blips.push(blip);
+        //Добавляем педов и таргеты
+        const myVector4 = {
+            x: place.PedPosition.x,
+            y: place.PedPosition.y,
+            z: place.PedPosition.z,
+            w: place.PedPosition.w
+        };
+        let targetTemp = {
+            model : rent.Office.Ped,
+            coords : myVector4,
+            minusOne : true,
+            freeze : true,
+            invincible : true,
+            blockevents : true,
+            animDict : 'abigail_mcs_1_concat-0',
+            anim : 'csb_abigail_dual-0',
+            flag : 1,
+            scenario : rent.Office.PedScenario,
+            target : {
+                options : [
+                    {
+                        type : 'client',
+                        event : 'c-fractionGarage:client:vehicleMenu',
+                        icon : rent.Office.TargetIcon,
+                        label : rent.Office.TargetLabel,
+                    }
+                ],
+                distance : 2.5
+            },
+            spawnNow : true
         }
+        tempData.push(targetTemp)
     }
+    let targetNumber: number = global.exports['qb-target'].SpawnPed(tempData)
+    if (targetNumber) peds.push(targetNumber)
+
 }
 
-// Создание одного блипа
-async function createSingleBlip(place: IPlaces, index: string): Promise<Blip | null> {
-    if (!place?.PedPosition) {
-        console.warn(`Место ${index} пропущено: отсутствует PedPosition`);
-        return null;
-    }
+// Функция очистки
+function cleanup() {
+    blips.forEach(blip => RemoveBlip(blip));
+    blips.length = 0;
 
-    const pos = new Vector3(
-        place.PedPosition.x,
-        place.PedPosition.y,
-        place.PedPosition.z
-    );
-
-    console.debug(`Создание блипа для позиции ${index}:`, pos.toString());
-
-    return await utils.blipCreate(
-        pos,
-        rent.Office?.Blip?.Name || "Аренда",
-        rent.Office?.Blip?.Sprite || 1,
-        rent.Office?.Blip?.Color || 3,
-        rent.Office?.Blip?.Scale || 1.0
-    );
-}
-
-// Очистка всех блипов
-function cleanupBlips() {
-    createdBlips.forEach(blip => {
-        try {
-            blip?.exists && blip.delete();
-        } catch (e) {
-            console.error('Ошибка при удалении блипа:', e);
-        }
+    peds.forEach(ped => {
+        DeleteEntity(ped);
+        DeletePed(ped);
     });
-    createdBlips.length = 0;
+    peds.length = 0;
 }
 
 // Запуск инициализации
@@ -104,7 +84,4 @@ const init = setTick(async () => {
     clearTick(init);
 });
 
-// Экспорт функций
-export function cleanup() {
-    cleanupBlips();
-}
+export { cleanup };

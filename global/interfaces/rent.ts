@@ -11,8 +11,7 @@ interface IRootObject {
 interface IOffice {
     Ped: string;
     PedScenario: string;
-    TargetLabelManager:string;
-    TargetLabelManagerDone:string;
+    TargetLabel:string;
     TargetIcon:string;
     Places:IPlaces[];
     Blip:Blip,

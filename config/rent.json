@@ -2,8 +2,7 @@
    "Office": {
      "Ped":"S_M_M_Postal_01",
      "PedScenario":"WORLD_HUMAN_CLIPBOARD",
-     "TargetLabelManager":"Начать работу",
-     "TargetLabelManagerDone":"Закончить работу",
+     "TargetLabel":"Начать работу",
      "TargetIcon": "fa fa-align-justify",
      "Places": [
        {
