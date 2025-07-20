@@ -31,3 +31,28 @@ export function blipCreate(pos:cfx.Vector3, name: string, sprite: number, color:
     console.log("blip created", JSON.stringify(blip))
     return blip;
 }
+
+export async function LoadModel(hash:number){
+    if (!IsModelInCdimage(hash))
+    {
+        console.error(`model ${hash} invalid`);
+        return;
+    }
+    RequestModel(hash);
+    while(!HasModelLoaded(hash)) await Delay(100);
+}
+
+
+export async function pedCreate(model:string, pos:cfx.Vector3, heading:number, scenario:string):Promise<number>
+{
+    var hash = GetHashKey(model);
+    await LoadModel(hash);
+    var handle = CreatePed(4, hash, pos.x, pos.y, pos.z - 0.98, heading, false, true);
+    PlaceObjectOnGroundProperly(handle);
+    FreezeEntityPosition(handle, true);
+    SetEntityInvincible(handle, true);
+    SetBlockingOfNonTemporaryEvents(handle, true);
+    TaskStartScenarioInPlace(handle, scenario, -1, true);
+    console.log("ped created", handle)
+    return handle;
+}
