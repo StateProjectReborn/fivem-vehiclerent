@@ -48,20 +48,14 @@ async function initializeRentalBlips() {
             distance: 2.5,
         });
         if (ped) peds.push(ped)
-        //tempData.push(targetTemp)
     }
-    //let targetNumber: number = await global.exports['qb-target'].SpawnPed(tempData)
-    //if (targetNumber) peds.push(targetNumber)
-
 }
 
 // Функция очистки
 async function cleanup() {
     blips.forEach(blip => RemoveBlip(blip));
     blips.length = 0;
-    //console.debug(`cleanup ${peds.length} ${JSON.stringify(peds)}`)
     for (const ped of peds) {
-        //console.debug(`ped for delete  ${ped}`)
         SetBlockingOfNonTemporaryEvents(ped, false)
         ClearPedTasksImmediately(ped)
         SetEntityAsNoLongerNeeded(ped)
@@ -70,7 +64,6 @@ async function cleanup() {
         DeleteEntity(ped);
     }
     peds.length = 0;
-    //console.debug(`cleanup ${peds.length}`)
 }
 
 // Запуск инициализации
@@ -84,6 +77,6 @@ export { cleanup };
 
 on("onResourceStop", (resource: string) => {
     if (resource == GetCurrentResourceName()) {
-        cleanup();
+        cleanup().then(r => console.debug("cleanup is correctly finished"));
     }
 });
