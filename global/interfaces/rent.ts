@@ -11,14 +11,15 @@ interface IRootObject {
 interface IOffice {
     Ped: string;
     PedScenario: string;
-    TargetLabel:string;
-    TargetIcon:string;
-    Places:IPlaces[];
-    Blip:Blip,
+    TargetLabel: string;
+    TargetIcon: string;
+    Places: IPlaces[];
+    Blip: Blip,
 }
 export interface IPlaces {
     PedPosition:IPosition,
-    VehicleSpawnPosition:IPosition
+    VehicleSpawnPosition:IPosition,
+    VehicleList:IVehicleList
 }
 
 interface IPosition {
@@ -26,6 +27,11 @@ interface IPosition {
     y: number;
     z: number;
     w: number;
+}
+
+interface IVehicleList {
+    Model: string;
+    Price: number;
 }
 
 export {Rent}

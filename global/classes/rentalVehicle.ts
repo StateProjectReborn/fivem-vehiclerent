@@ -8,9 +8,10 @@ export class RentalVehicle {
 
     constructor(
         private model: string,     // Название модели ТС (например 'blista')
+        private rentalDuration: number,   // Длительность аренды в минутах
         private spawnPosition: Vector3,  // Позиция спавна (x, y, z)
         private spawnHeading: number,    // Направление спавна (угол поворота)
-        private rentalDuration: number   // Длительность аренды в минутах
+
     ) {
         this.spawn();  // Автоматически спавним ТС при создании объекта
     }
@@ -94,12 +95,21 @@ export class RentalVehicle {
 
             // Отрисовка текста на экране
             // @ts-ignore
-            DrawText2D(
-                `Осталось времени: ${remaining} мин`,
-                [0.5, 0.95], // Позиция (центр снизу)
-                0.5,         // Масштаб текста
-                4            // Стиль текста
-            );
+            if (remaining > 5)
+                utils.DrawText2D(
+                    `Осталось времени: ${remaining} мин`,
+                    [0.5, 0.95], // Позиция (центр снизу)
+                    0.5         // Масштаб текста
+
+                );
+            else
+                utils.DrawText2D(
+                    `Осталось времени: ${remaining} мин`,
+                    [0.5, 0.95], // Позиция (центр снизу)
+                    0.5,
+                    [255,0,0,255],
+                    4,            // Стиль текста,
+                );
         });
     }
     /**

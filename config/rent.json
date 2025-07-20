@@ -7,7 +7,17 @@
      "Places": [
        {
           "PedPosition": {"x":-1016.72, "y":-2703.42, "z":13.76, "w":150.51},
-          "VehicleSpawnPosition": {"x":-1014.17, "y":-2696.54, "z":13.98, "w":159.32}
+          "VehicleSpawnPosition": {"x":-1014.17, "y":-2696.54, "z":13.98, "w":159.32},
+          "VehicleList": [
+            {
+              "Model": "blista",
+              "Price": 1
+            },
+            {
+              "Model": "emperor",
+              "Price": 2
+            }
+          ]
        }
      ],
      "Blip":{

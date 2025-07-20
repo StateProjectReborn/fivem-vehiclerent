@@ -1,1 +1,1 @@
-"use strict";(()=>{console.log("test");})();
+"use strict";(()=>{var r=global.exports["qb-core"].GetCoreObject();r.Functions.CreateCallback("c-vehiclerent:server:CanPay",(n,t,e)=>{let a=r.Functions.GetPlayer(n);t(a.PlayerData.money.bank>=e||a.PlayerData.money.cash>=e)});})();

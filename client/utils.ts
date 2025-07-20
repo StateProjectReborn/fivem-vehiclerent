@@ -56,3 +56,39 @@ export async function pedCreate(model:string, pos:cfx.Vector3, heading:number, s
     console.log("ped created", handle)
     return handle;
 }
+
+/**
+ * Отображает 2D текст на экране
+ * @param text - Текст для отображения
+ * @param position - Позиция [x, y] (нормализованные координаты 0-1)
+ * @param scale - Масштаб текста
+ * @param color - Цвет в формате RGBA (опционально)
+ * @param font - Стиль текста (опционально)
+ *
+ */
+export function DrawText2D(
+    text: string,
+    position: [number, number],
+    scale: number,
+    color: [number, number, number, number] = [255, 255, 255, 255],
+    font: number = 4
+): void {
+
+    // Сброс предыдущих настроек
+    ClearAllHelpMessages();
+
+    // Установка стиля
+    SetTextFont(font);
+    SetTextScale(scale, scale);
+    SetTextProportional(true);
+    SetTextColour(color[0], color[1], color[2], color[3]);
+    SetTextOutline();
+    SetTextDropShadow();
+    SetTextCentre(true);
+
+    // Отрисовка
+    BeginTextCommandDisplayText('STRING');
+    AddTextComponentSubstringPlayerName(text);
+    EndTextCommandDisplayText(position[0], position[1]);
+
+}

@@ -1,10 +1,12 @@
 import { Vector3 } from 'fivem-js';
 import { RentalVehicle } from './rentalVehicle';
-import {IRentalPoint} from '../interfaces/rentalPoint'
+import { locale } from '../locale'
 
 import * as utils from  '../../client/utils'
 import { rent } from '../configRent';
-
+//глобальная переменная с ox-lib
+const lib = global.exports['ox_lib'];
+let QBCore = global.exports['qb-core'].GetCoreObject();
 
 const Delay = (time: number) => new Promise(resolve => setTimeout(resolve, time));
 
@@ -52,7 +54,8 @@ export class RentalManager {
                     //начинаем работать
                     {
                         type : 'client',
-                        event : 'c-fractionGarage:client:vehicleMenu',
+                        event : 'c-vehicleRent:client:vehicleMenu',
+                        args: place,
                         icon : rent.Office.TargetIcon,
                         label : rent.Office.TargetLabel,
                         //canInteract: () => {return  !inMission},
@@ -80,91 +83,83 @@ export class RentalManager {
         }
         this.peds.length = 0;
     }
-
     // /**
-    //  * Показывает меню выбора ТС
-    //  * @param point - точка аренды
+    //  * Запускает процесс аренды выбранного ТС
     //  */
-    // private async showRentalMenu(point: RentalPoint): Promise<void> {
-    //     // Создаем варианты выбора
-    //     const menuItems = point.vehicles.map(vehicle => ({
-    //         label: GetLabelText(vehicle) || vehicle,  // Локализованное название
-    //         value: vehicle
-    //     }));
-    //
-    //     // Показываем меню выбора
-    //     const selectedVehicle = await ShowMenu(
-    //         "АРЕНДА ТРАНСПОРТА",
-    //         menuItems,
-    //         "Выберите транспортное средство"
-    //     );
-    //
-    //     if (selectedVehicle) {
-    //         // Запрашиваем время аренды
-    //         const duration = await ShowInput(
-    //             "ВРЕМЯ АРЕНДЫ",
-    //             "Введите время в минутах (макс. 180)",
-    //             "30",
-    //             3
-    //         );
-    //
-    //         const durationNum = Number(duration);
-    //         if (duration && durationNum > 0 && durationNum <= 180) {
-    //             this.startRental(selectedVehicle, point, durationNum);
-    //         } else {
-    //             console.debug("~r~Некорректное время аренды");
-    //         }
-    //     }
-    // }
-    /**
-     * Начинает процесс аренды
-     */
-    /*private startRental(model: string, point: RentalPoint, duration: number): void {
-        // Если уже есть арендованное ТС - возвращаем его
-        if (this.currentVehicle) {
-            this.currentVehicle.returnVehicle();
+    public async prepareRentalProcess(model: string, price: number, coords: Vector3, heading: number){
+        try {
+            // Запрос времени аренды
+            const input = await lib.inputDialog('Время аренды', [{
+                type: 'number',
+                label: 'Введите время аренды в минутах (1-120)',
+                icon: 'hashtag',
+                placeholder: '15',
+                min: 1,
+                max: 120
+            }]);
+
+            if (!input) {
+                console.log('Пользователь отменил ввод');
+                return;
+            }
+
+            const duration = parseInt(input);
+            if (isNaN(duration)) {
+                lib.notify({ type: 'error', description: 'Некорректное время аренды' });
+                return;
+            }
+
+            // Расчет стоимости
+            const totalPrice = duration * price;
+
+            // Подтверждение аренды
+            const confirm = await lib.registerContext({
+                title: `Подтверждение аренды`,
+                id: 'rent_confirm',
+                options: [
+                    // {
+                    //     title: `Арендовать ${model} на ${duration} мин`,
+                    //     description: `Общая стоимость: $${totalPrice}`,
+                    //     icon: 'car',
+                    //     arrow: true,
+                    //     event: 'c-vehicleRent:client:confirmRental',
+                    //     args: { model, duration, price: totalPrice }
+                    // }
+                    {
+                        title: `Арендовать ${model} на ${duration} мин`,
+                        description: `Общая стоимость: $${totalPrice}`,
+                        icon: 'car',
+                        onSelect: () => {
+                            console.debug('Pressed the button!');
+                            console.debug(`${model} ${duration} ${totalPrice}`);
+                            this.checkMoneyForRental(model, duration, totalPrice, coords, heading);
+                        }
+                    }
+                ]
+            });
+            lib.showContext('rent_confirm');
+
+        } catch (e) {
+            console.error('Ошибка в процессе аренды:', e);
+            lib.notify({ type: 'error', description: 'Ошибка при оформлении аренды' });
         }
-
-        // Создаем новое ТС
-        this.currentVehicle = new RentalVehicle(
-            model,
-            point.position,
-            point.heading,
-            duration
-        );
-
-        console.debug(`~g~Вы арендовали ${GetLabelText(model) || model} на ${duration} минут`);
-        
-
-        // Регистрируем команду для продления
-        RegisterCommand("extendrental", () => {
-            this.showExtensionMenu();
-        }, false);
     }
-    */
-    /**
-     * Меню продления аренды
-     */
-    /*private async showExtensionMenu(): Promise<void> {
-        if (!this.currentVehicle) {
-            console.debug("~r~У вас нет арендованного ТС");
-            return;
-        }
+    private checkMoneyForRental(model: string, duration: number, totalPrice: number, coords: Vector3, heading :number) {
+        QBCore.Functions.TriggerCallback('c-vehiclerent:server:CanPay', async (result:boolean) => {
+            if (result) {
+                this.startRentalProcess(model, duration, totalPrice, coords, heading)
+            }
+            else QBCore.Functions.Notify(locale.OutMoney, "error", 5000);
+        }, totalPrice)
+    }
 
-        const minutes = await ShowInput(
-            "ПРОДЛЕНИЕ АРЕНДЫ",
-            "Введите количество минут",
-            "15",
-            3
-        );
-
-        const minutesNum = Number(minutes);
-        if (minutes && minutesNum > 0) {
-            this.currentVehicle.extendRental(minutesNum);
-        } else {
-            console.debug("~r~Некорректное значение");
-        }
-    }*/
+    private startRentalProcess(model: string, duration: number, totalPrice: number, coords: Vector3, heading :number) {
+        emitNet("c-vehiclerent:server:pay", totalPrice);
+        let vehicle = new RentalVehicle(model, duration, coords, heading)
+    }
 }
+
+
+
 
 
