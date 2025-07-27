@@ -65,12 +65,12 @@ export class RentalVehicle {
         const numbers = Math.floor(Math.random() * 900 + 100); // От 100 до 999
 
         // @ts-ignore
-        SetVehicleNumberPlateText(this.vehicle.Handle, `${letters}-${numbers}`);
+        SetVehicleNumberPlateText(this.vehicle.Handle, `${letters}0${numbers}`);
         SetVehicleEngineOn(this.vehicle.Handle, true, true, false);
         SetVehicleFuelLevel(this.vehicle.Handle, 100.0)
         DecorSetFloat(this.vehicle.Handle, "_FUEL_LEVEL", GetVehicleFuelLevel(this.vehicle.Handle))
         SetVehicleRadioEnabled(this.vehicle.Handle,false)
-        emitNet('vehiclekeys:client:SetOwner', `${letters}-${numbers}`)
+        emit('vehiclekeys:client:SetOwner', `${letters}0${numbers}`)
         this.createBlip();  // Создаем метку на карте
         this.startTimer();  // Запускаем таймер аренды
         this.showNotification(`Аренда на ${this.rentalDuration} минут. По окончании ТС будет удалено автоматически`, 7500);
