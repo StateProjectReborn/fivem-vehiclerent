@@ -3,13 +3,17 @@ import { Vehicle, Vector3, Blip } from 'fivem-js';
 
 //глобальная переменная с ox-lib
 const lib = global.exports['ox_lib'];
-
+//глобальная переменная QBCore
+let QBCore = global.exports['qb-core'].GetCoreObject();
 
 export class RentalVehicle {
+    // Событие окончания аренды (с типизацией)
+    public onRentalExpired: ((vehicle: RentalVehicle) => void) | null = null;
+
     private vehicle: Vehicle;       // Ссылка на созданное ТС
     private blip: Blip;            // Блип на карте для ТС
     private expiryTime: number;    // Время окончания аренды (в мс)
-    private timerTick:number;
+    private timerHandle:number;
 
     constructor(
         private model: string,     // Название модели ТС (например 'blista')
@@ -21,6 +25,17 @@ export class RentalVehicle {
         this.spawn();  // Автоматически спавним ТС при создании объекта
 
     }
+
+    /*private triggerExpiredEvent(): void {
+        clearTick(this.timerHandle);
+
+        // Вызываем событие если есть подписчики
+        if (this.onRentalExpired) {
+            this.onRentalExpired(this);
+        }
+
+
+    }*/
 
     /**
      * Загружает модель и создает транспортное средство
@@ -51,13 +66,11 @@ export class RentalVehicle {
 
         // @ts-ignore
         SetVehicleNumberPlateText(this.vehicle.Handle, `${letters}-${numbers}`);
-        // @ts-ignore
         SetVehicleEngineOn(this.vehicle.Handle, true, true, false);
-        // @ts-ignore
         SetVehicleFuelLevel(this.vehicle.Handle, 100.0)
-        // @ts-ignore
         DecorSetFloat(this.vehicle.Handle, "_FUEL_LEVEL", GetVehicleFuelLevel(this.vehicle.Handle))
-
+        SetVehicleRadioEnabled(this.vehicle.Handle,false)
+        emitNet('vehiclekeys:client:SetOwner', `${letters}-${numbers}`)
         this.createBlip();  // Создаем метку на карте
         this.startTimer();  // Запускаем таймер аренды
         this.showNotification(`Аренда на ${this.rentalDuration} минут. По окончании ТС будет удалено автоматически`, 7500);
@@ -93,7 +106,7 @@ export class RentalVehicle {
         this.expiryTime = GetGameTimer() + this.rentalDuration * 60000;
 
         // Запускаем проверку каждый кадр
-        this.timerTick = setTick(() => {
+        this.timerHandle = setTick(() => {
             // @ts-ignore
             // Расчет оставшегося времени в миллисекундах
             const remainingMs = this.expiryTime - GetGameTimer();
@@ -136,7 +149,7 @@ export class RentalVehicle {
             // Автоматический возврат при истечении времени
             if (remainingMs <= 0) {
                 this.returnVehicle();
-                clearTick(timerTick); // Останавливаем проверку
+                clearTick(this.timerHandle); // Останавливаем проверку
                 return;
             }
         });
@@ -155,7 +168,7 @@ export class RentalVehicle {
      * Завершает аренду и удаляет ТС
      */
     public returnVehicle(): void {
-        clearTick(this.timerTick)
+        clearTick(this.timerHandle)
         // Удаляем ТС если существует
         if (this.vehicle && this.vehicle.exists) {
             this.vehicle.delete();
@@ -167,6 +180,11 @@ export class RentalVehicle {
         }
         // @ts-ignore
         this.showNotification("Аренда завершена", 5000);
+
+        // Вызываем событие если есть подписчики
+        if (this.onRentalExpired) {
+            this.onRentalExpired(this);
+        }
     }
 
     private showNotification(message: string, duration: number = 3000, title:string = "Аренда", type:string = "success") {

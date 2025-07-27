@@ -1,0 +1,45 @@
+{
+   "Office": {
+     "Ped":"S_M_M_Postal_01",
+     "PedScenario":"WORLD_HUMAN_CLIPBOARD",
+     "TargetLabel":"Аренда",
+     "TargetIcon": "fa fa-align-justify",
+     "Places": [
+       {
+          "PedPosition": {"x":-1016.72, "y":-2703.42, "z":13.76, "w":150.51},
+          "VehicleSpawnPosition": {"x":-1014.17, "y":-2696.54, "z":13.98, "w":159.32},
+          "VehicleList": [
+            {
+              "Model": "blista",
+              "Price": 1
+            },
+            {
+              "Model": "emperor",
+              "Price": 2
+            }
+          ]
+       },
+       {
+         "PedPosition": {"x":-242.23, "y":-987.24, "z":29.29, "w":256.27},
+         "VehicleSpawnPosition": {"x":-246.39, "y":-1000.04, "z":29.14, "w":234.16},
+
+         "VehicleList": [
+           {
+             "Model": "blista",
+             "Price": 1
+           },
+           {
+             "Model": "emperor",
+             "Price": 2
+           }
+         ]
+       }
+     ],
+     "Blip":{
+       "Name":"VehicleRent",
+       "Sprite": 348,
+       "Color": 25,
+       "Scale":0.6
+     }
+   }
+}

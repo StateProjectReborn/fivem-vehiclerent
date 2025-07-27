@@ -1,0 +1,1 @@
+(()=>{var n="config.json",e=LoadResourceFile(GetCurrentResourceName(),n),r;if(e!=null)try{r=JSON.parse(e)}catch{console.error("\u041E\u0448\u0438\u0431\u043A\u0430 \u043F\u0430\u0440\u0441\u0438\u043D\u0433\u0430 \u0444\u0430\u0439\u043B\u0430")}else console.error("\u041E\u0448\u0438\u0431\u043A\u0430 \u0447\u0442\u0435\u043D\u0438\u044F \u0444\u0430\u0439\u043B\u0430");})();

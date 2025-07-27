@@ -20,8 +20,16 @@ export class RentalManager {
     
     constructor() {
         this.initializeRentalPoints();  // Инициализируем точки аренды
-        //this.createInteractionZones();  // Создаем зоны взаимодействия
+        this.setupEventHandlers();
+
     }
+
+    private setupEventHandlers(): void {
+        onNet('rental:clientForceReturn', () => {
+            this.forceReturnCurrentVehicle();
+        });
+    }
+
     /**
      * Инициализация точек аренды (можно вынести в конфиг)
      */
@@ -158,7 +166,17 @@ export class RentalManager {
     private startRentalProcess(model: string, duration: number, totalPrice: number, coords: Vector3, heading :number) {
         emitNet("c-vehicleRent:server:pay", totalPrice);
         this.currentVehicle  = new RentalVehicle(model, duration, coords, heading)
+
+        // Подписываемся на событие окончания
+        this.currentVehicle.onRentalExpired = (vehicle) => {
+            this.handleRentalExpired(vehicle);
+        };
     }
+
+    private handleRentalExpired(vehicle: RentalVehicle): void {
+        this.currentVehicle  = null;
+    }
+
     /**
      * Проверяет наличие текущего арендованного транспортного средства
      * @returns {boolean} true - если есть активное ТС, false - если нет
