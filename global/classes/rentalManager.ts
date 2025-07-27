@@ -82,6 +82,7 @@ export class RentalManager {
             DeleteEntity(ped);
         }
         this.peds.length = 0;
+        this.currentVehicle = null;
     }
     // /**
     //  * Запускает процесс аренды выбранного ТС
@@ -145,7 +146,8 @@ export class RentalManager {
         }
     }
     private checkMoneyForRental(model: string, duration: number, totalPrice: number, coords: Vector3, heading :number) {
-        QBCore.Functions.TriggerCallback('c-vehiclerent:server:CanPay', async (result:boolean) => {
+        QBCore.Functions.TriggerCallback('c-vehicleRent:server:CanPay', async (result:boolean) => {
+            console.debug(`c-vehicleRent:server:CanPay ${result}`)
             if (result) {
                 this.startRentalProcess(model, duration, totalPrice, coords, heading)
             }
@@ -154,9 +156,25 @@ export class RentalManager {
     }
 
     private startRentalProcess(model: string, duration: number, totalPrice: number, coords: Vector3, heading :number) {
-        emitNet("c-vehiclerent:server:pay", totalPrice);
-        let vehicle = new RentalVehicle(model, duration, coords, heading)
+        emitNet("c-vehicleRent:server:pay", totalPrice);
+        this.currentVehicle  = new RentalVehicle(model, duration, coords, heading)
     }
+    /**
+     * Проверяет наличие текущего арендованного транспортного средства
+     * @returns {boolean} true - если есть активное ТС, false - если нет
+     */
+    public isCurrentVehicle(): boolean {
+        return this.currentVehicle != null;
+    }
+    /**
+     * Принудительно прерывает аренду
+     * @returns {boolean} true - если есть активное ТС, false - если нет
+     */
+    public terminate(): void {
+        this.currentVehicle?.returnVehicle();
+        this.currentVehicle = null;
+    }
+
 }
 
 

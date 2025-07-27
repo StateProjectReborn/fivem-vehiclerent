@@ -1,10 +1,15 @@
 import * as utils from '../../client/utils'
 import { Vehicle, Vector3, Blip } from 'fivem-js';
 
+//глобальная переменная с ox-lib
+const lib = global.exports['ox_lib'];
+
+
 export class RentalVehicle {
     private vehicle: Vehicle;       // Ссылка на созданное ТС
     private blip: Blip;            // Блип на карте для ТС
     private expiryTime: number;    // Время окончания аренды (в мс)
+    private timerTick:number;
 
     constructor(
         private model: string,     // Название модели ТС (например 'blista')
@@ -14,6 +19,7 @@ export class RentalVehicle {
 
     ) {
         this.spawn();  // Автоматически спавним ТС при создании объекта
+
     }
 
     /**
@@ -40,13 +46,21 @@ export class RentalVehicle {
         ));
 
         // Настраиваем ТС
+        const letters = "RENT";
+        const numbers = Math.floor(Math.random() * 900 + 100); // От 100 до 999
+
         // @ts-ignore
-        SetVehicleNumberPlateText(this.vehicle.Handle, "RENTAL");
+        SetVehicleNumberPlateText(this.vehicle.Handle, `${letters}-${numbers}`);
         // @ts-ignore
         SetVehicleEngineOn(this.vehicle.Handle, true, true, false);
+        // @ts-ignore
+        SetVehicleFuelLevel(this.vehicle.Handle, 100.0)
+        // @ts-ignore
+        DecorSetFloat(this.vehicle.Handle, "_FUEL_LEVEL", GetVehicleFuelLevel(this.vehicle.Handle))
 
         this.createBlip();  // Создаем метку на карте
         this.startTimer();  // Запускаем таймер аренды
+        this.showNotification(`Аренда на ${this.rentalDuration} минут. По окончании ТС будет удалено автоматически`, 7500);
     }
     /**
      * Создает блип (метку на карте) для арендованного ТС
@@ -79,37 +93,52 @@ export class RentalVehicle {
         this.expiryTime = GetGameTimer() + this.rentalDuration * 60000;
 
         // Запускаем проверку каждый кадр
-        const timerTick = setTick(() => {
+        this.timerTick = setTick(() => {
             // @ts-ignore
-            const currentTime = GetGameTimer();
+            // Расчет оставшегося времени в миллисекундах
+            const remainingMs = this.expiryTime - GetGameTimer();
 
-            // Если время вышло
-            if (currentTime > this.expiryTime) {
+            // Конвертация в часы, минуты, секунды
+            const hours = Math.floor(remainingMs / 3600000);
+            const minutes = Math.floor((remainingMs % 3600000) / 60000);
+            const seconds = Math.floor((remainingMs % 60000) / 1000);
+
+            // Форматирование времени (добавляем ведущие нули)
+            const timeString =
+                `${hours.toString().padStart(2, '0')}:` +
+                `${minutes.toString().padStart(2, '0')}:` +
+                `${seconds.toString().padStart(2, '0')}`;
+
+            // Динамические эффекты
+            const isWarning = remainingMs < 300000; // 5 минут
+            const isCritical = remainingMs < 15000; // 15 секунд
+
+            // Параметры отрисовки
+            const scale = isCritical ?
+                0.6 + (0.05 * Math.sin(GetGameTimer() / 200)) : // Пульсация
+                0.5;
+
+            const color = isCritical ?
+                [255, 0, 0, 255] : // Красный (критично)
+                isWarning ?
+                    [255, 165, 0, 255] : // Оранжевый (предупреждение)
+                    [255, 255, 255, 255]; // Белый (норма)
+
+            // Отрисовка текста
+            utils.DrawText2D(
+                `Время до окончания аренды: ${timeString}`,
+                [0.5, 0.95], // Центр нижней части экрана
+                scale,
+                color,
+                4
+            );
+
+            // Автоматический возврат при истечении времени
+            if (remainingMs <= 0) {
                 this.returnVehicle();
                 clearTick(timerTick); // Останавливаем проверку
                 return;
             }
-
-            // Расчет оставшегося времени в минутах
-            const remaining = Math.ceil((this.expiryTime - currentTime) / 60000);
-
-            // Отрисовка текста на экране
-            // @ts-ignore
-            if (remaining > 5)
-                utils.DrawText2D(
-                    `Осталось времени: ${remaining} мин`,
-                    [0.5, 0.95], // Позиция (центр снизу)
-                    0.5         // Масштаб текста
-
-                );
-            else
-                utils.DrawText2D(
-                    `Осталось времени: ${remaining} мин`,
-                    [0.5, 0.95], // Позиция (центр снизу)
-                    0.5,
-                    [255,0,0,255],
-                    4,            // Стиль текста,
-                );
         });
     }
     /**
@@ -119,13 +148,14 @@ export class RentalVehicle {
     public extendRental(minutes: number): void {
         this.expiryTime += minutes * 60000;
         // @ts-ignore
-        ShowNotification(`~g~Аренда продлена на ${minutes} минут`);
+        this.showNotification(`Аренда продлена на ${minutes} минут`, 5000);
     }
 
     /**
      * Завершает аренду и удаляет ТС
      */
     public returnVehicle(): void {
+        clearTick(this.timerTick)
         // Удаляем ТС если существует
         if (this.vehicle && this.vehicle.exists) {
             this.vehicle.delete();
@@ -136,6 +166,16 @@ export class RentalVehicle {
             this.blip.delete();
         }
         // @ts-ignore
-        ShowNotification("~r~Аренда завершена");
+        this.showNotification("Аренда завершена", 5000);
+    }
+
+    private showNotification(message: string, duration: number = 3000, title:string = "Аренда", type:string = "success") {
+
+        lib.notify({
+            title: title,
+            description: message,
+            type: type,
+            duration: duration
+        });
     }
 }

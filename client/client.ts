@@ -20,7 +20,19 @@ const init = setTick(async () => {
 
 //Событие открытия меню офиса
 on("c-vehicleRent:client:vehicleMenu", (data: any) => {
-    console.debug(`c-vehicleRent:client:vehicleMenu ${JSON.stringify(data.args.VehicleList)}`)
+    let isBusy =rentalManager.isCurrentVehicle();
+    //console.debug(`isBusy ${isBusy}`)
+    if (isBusy)
+    {
+        lib.notify({
+            title: "Аренда",
+            description: "У Вас уже есть активная аренда",
+            type: "inform",
+            duration: 7500
+        });
+        return;
+    }
+
     if (!data?.args?.VehicleList) {
         console.error('Некорректные данные для меню аренды');
         return;
@@ -66,6 +78,12 @@ on("c-vehicleRent:client:vehicleMenu", (data: any) => {
 });
 
 
+
+
+//Событие прерывания аренды
+onNet("c-vehicleRent:client:terminate", () => {
+    rentalManager?.terminate();
+});
 
 //Событие выключения скрипта
 on("onResourceStop", (resource: string) => {

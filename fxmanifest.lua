@@ -5,8 +5,10 @@ description 'Rent vehicle script for QBCore servers'
 version '0.0.1'
 
 files {
+   'build/global/*.json',
+   'build/global/*.js',
    'config/*.json',
-   	'*.json'
+   '*.json'
 }
 client_scripts {
 	'build/client/client.js'
